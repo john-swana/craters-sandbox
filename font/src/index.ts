@@ -29,14 +29,33 @@ SOFTWARE.`;
         .then(async function() {
             const canvas2DRenderer = new CRATERS.WebGLRenderer(1000, 700)
             const fontManager = new CRATERS.FontManager(canvas2DRenderer, "40px Pixel font", "#fafafa")
-            // scan characters and index them
-            var font = fontManager.load(text)
+            
+            // Load fonts
+            var fontLicense = fontManager.load(text)
+            var fontTitle = fontManager.load("PRESS ENTER TO START")
+
+            const input = new CRATERS.Input();
+            input.bind(CRATERS.Input.KEY.ENTER, "START");
+            
+            let showTitle = true;
+
             const renderLoop = new CRATERS.RenderLoop(function(renderLoop: typeof CRATERS.RenderLoop) {
+                if (input.isPressed("START") === 2) { // 2 = Just Pressed
+                    showTitle = !showTitle;
+                }
+
                 canvas2DRenderer.clear()
-                // split into chunks
-                text.split("\n")
-                    // draw at line number x (75% height)
-                    .map((line: string, ln: number) => font.draw(line, 10, (40 * .75) * ln))
+                
+                if (showTitle) {
+                    if (Math.floor(Date.now() / 500) % 2 === 0) {
+                        fontTitle.draw("PRESS ENTER TO START", 300, 300);
+                    }
+                } else {
+                    // split into chunks
+                    text.split("\n")
+                        // draw at line number x (75% height)
+                        .map((line: string, ln: number) => fontLicense.draw(line, 10, (40 * .75) * ln))
+                }
             })
             document.body.append(canvas2DRenderer.canvasElement)
         })
