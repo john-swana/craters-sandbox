@@ -1,0 +1,23 @@
+{
+    "extends": "@tsconfig/recommended/tsconfig.json",
+    "compilerOptions": {
+        "strictPropertyInitialization": false,
+        "strictNullChecks": false,
+        "preserveConstEnums": true,
+        "esModuleInterop": true,
+        "sourceMap": true,
+        "module": "esnext",
+        "target": "es2021",
+        "declaration": true,
+        "moduleResolution": "node",
+        "allowJs": true,
+        "outDir": "./dist/"
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts"
+    ]
+}
