@@ -1,4 +1,6 @@
 const path = require("path")
+const TerserPlugin = require("terser-webpack-plugin");
+
 module.exports = function (grunt) {
   grunt.initConfig({
     webpack: {
@@ -18,19 +20,22 @@ module.exports = function (grunt) {
         },
         module: {
           rules: [{
-              test: /\.glsl$/,
-              loader: "webpack-glsl-loader"
-                        },
-            {
-              test: /\.tsx?$/,
-              use: "ts-loader",
-              exclude: /node_modules/,
-                        }
-                    ]
+            test: /\.glsl$/,
+            loader: "webpack-glsl-loader"
+          },
+          {
+            test: /\.tsx?$/,
+            use: "ts-loader",
+            exclude: /node_modules/,
+          }
+          ]
         }
       },
       prod: {
         mode: "production",
+        optimization: {
+          minimizer: [new TerserPlugin()],
+        },
         entry: {
           "./dist/index": "./src/index"
         },
@@ -44,15 +49,15 @@ module.exports = function (grunt) {
         },
         module: {
           rules: [{
-              test: /\.glsl$/,
-              loader: "webpack-glsl-loader"
-                        },
-            {
-              test: /\.tsx?$/,
-              use: "ts-loader",
-              exclude: /node_modules/,
-                        }
-                    ]
+            test: /\.glsl$/,
+            loader: "webpack-glsl-loader"
+          },
+          {
+            test: /\.tsx?$/,
+            use: "ts-loader",
+            exclude: /node_modules/,
+          }
+          ]
         }
       }
     }

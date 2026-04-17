@@ -1,0 +1,8 @@
+Sprite Demo Credits
+===================
+
+Graphics
+--------
+Source: Game Art Guppy (https://www.gameartguppy.com/)
+Assets:
+- spritesheet.png
