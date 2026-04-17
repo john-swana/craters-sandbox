@@ -1,12 +1,4 @@
-import CRATERS from "craters";
-
-// Aliases
-const SAT = CRATERS.SAT;
-const Canvas2DRenderer = CRATERS.Canvas2DRenderer;
-const Input = CRATERS.Input;
-const RenderLoop = CRATERS.RenderLoop;
-const FontManager = CRATERS.FontManager;
-const SoundManager = CRATERS.SoundManager;
+import { SAT, Canvas2DRenderer, Input, RenderLoop, FontManager, QuadTree as QuadTreeNS } from "craters";
 
 const Vector = SAT.Vector;
 const Box = SAT.Box;
@@ -26,10 +18,13 @@ interface Body {
 const renderer = new Canvas2DRenderer(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.canvasElement);
 
-// Handle resize
-window.addEventListener('resize', () => {
-    renderer.resize(window.innerWidth, window.innerHeight);
-});
+// Handle resize (debounced — orientationchange fires before dimensions update)
+// visualViewport covers iOS address-bar show/hide which doesn't fire 'resize'
+let _rsz: any;
+const _onResize = () => { clearTimeout(_rsz); _rsz = setTimeout(() => renderer.resize(window.innerWidth, window.innerHeight), 150); };
+window.addEventListener('resize', _onResize);
+window.addEventListener('orientationchange', _onResize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', _onResize);
 
 // Initialize Input
 const input = new Input();
@@ -40,15 +35,7 @@ input.bind("Touch0", "TOGGLE_MODE");
 const fontManager = new FontManager(renderer, "20px Arial", "#ffffff");
 const font = fontManager.load("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:! ");
 
-// Initialize SoundManager
-const soundManager = new SoundManager();
-// Simple beep sound (base64 encoded wav)
-const beepBase64 = "data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YRAAAACAgICAgICAgICAgICAgICA";
-let beepSound: any = null;
-soundManager.load(beepBase64).then((sound: any) => {
-    beepSound = sound;
-    beepSound.setVolume(0.1);
-});
+
 
 // --- Interactive Mode State ---
 const staticBox = new Box(new Vector(window.innerWidth / 2 - 100, window.innerHeight / 2 - 75), 200, 150).toPolygon();
@@ -274,7 +261,7 @@ const renderLoop = new RenderLoop((loop: any) => {
 
         // Collisions (QuadTree)
         const bounds = new Box(new Vector(0, 0), window.innerWidth, window.innerHeight);
-        const qt = new CRATERS.QuadTree.QuadTree(bounds);
+        const qt = new QuadTreeNS.QuadTree(bounds);
 
         // Insert all bodies into QuadTree
         for (let i = 0; i < bodies.length; i++) {
@@ -447,9 +434,7 @@ const renderLoop = new RenderLoop((loop: any) => {
         // Play sound on collision start
         const isColliding = collided || collided2;
         if (isColliding && !wasColliding) {
-            if (beepSound) {
-                beepSound.play();
-            }
+
         }
         wasColliding = isColliding;
 
@@ -460,5 +445,8 @@ const renderLoop = new RenderLoop((loop: any) => {
         }
     }
 });
+
+// Prevent long-press context menu on mobile
+window.addEventListener('contextmenu', e => e.preventDefault());
 
 renderLoop.start();

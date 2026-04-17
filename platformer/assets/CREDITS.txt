@@ -1,0 +1,17 @@
+Platformer Demo Credits
+=======================
+
+Graphics & Fonts
+----------------
+Source: Kenney (https://www.kenney.nl)
+License: CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
+Assets:
+- Platformer Pack (platformer.png, player.png, coin.png)
+- Fonts (test.ttf)
+
+Sound Effects & Music
+---------------------
+Source: CanariPack 8BIT TopDown by Johan Vinet (https://canarigames.itch.io/canaripack-8bit-topdown)
+License: Paid License (Purchased)
+Assets:
+- Jump, Land, Pickup, Hurt, Music
