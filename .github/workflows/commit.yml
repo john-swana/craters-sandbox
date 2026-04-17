@@ -9,25 +9,43 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [ '20.x' ]
 
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies and build
-        run: for sample in sat sprite tilemap-manager font platformer rigidbody; do cd $sample; npm install; npm run build:prod; rm -rf node_modules; cd ..; done
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Build sat
+        working-directory: sat
+        run: npm install && npm run build:prod
+
+      - name: Build sprite
+        working-directory: sprite
+        run: npm install && npm run build:prod
+
+      - name: Build tilemap-manager
+        working-directory: tilemap-manager
+        run: npm install && npm run build:prod
+
+      - name: Build font
+        working-directory: font
+        run: npm install && npm run build:prod
+
+      - name: Build platformer
+        working-directory: platformer
+        run: npm install && npm run build:prod
+
+      - name: Build rigidbody
+        working-directory: rigidbody
+        run: npm install && npm run build:prod
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: .
+          clean-exclude: |
+            .nojekyll
