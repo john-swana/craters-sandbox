@@ -46,7 +46,7 @@ window.addEventListener('orientationchange', _onResize);
     let camY = 0;
     const speed = 5;
 
-    const renderLoop = new RenderLoop(function (renderLoop: typeof RenderLoop) {
+    const renderLoop = new RenderLoop(function (renderLoop: RenderLoop) {
         if (input.isPressed("LEFT")) camX -= speed;
         if (input.isPressed("RIGHT")) camX += speed;
         if (input.isPressed("UP")) camY -= speed;

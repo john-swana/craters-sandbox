@@ -1,49 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Platformer</title>
-    <style>
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Craters Adventure</title>
+  <style>
+    /* Local Kenney pixel fonts — names match the in-canvas FontManager. */
+    @font-face { font-family: 'GameFont';          src: url('./assets/fonts/Kenney Future.ttf') format('truetype'); }
+    @font-face { font-family: 'KenneyFuture';       src: url('./assets/fonts/Kenney Future.ttf') format('truetype'); }
+    @font-face { font-family: 'KenneyFutureNarrow'; src: url('./assets/fonts/Kenney Future Narrow.ttf') format('truetype'); }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #1e1e1e;
-            overscroll-behavior: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: none;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
+    /* Theme — taken from the in-game HUD palette (dark purple + gold). */
+    :root {
+      --bg:#0b0814; --panel:#241a3a; --edge:#120e26; --line:#4a3a78;
+      --gold:#ffd23f; --gold-dark:#c79a1f; --cream:#fff4d6; --danger:#ff6b6b;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'GameFont', monospace;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; min-height: 100dvh; padding: 8px;
+      overflow: hidden; touch-action: none; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        canvas {
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 0;
-            touch-action: none;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
+    /* Wrapper sized to the game's fitted width, so the controls bar above and the
+       touch pad below line up exactly with the canvas. 980px is the original
+       desktop cap; the other terms shrink it to fit narrow / short viewports. */
+    .wrap {
+      width: min(980px, 100vw - 16px, calc((100dvh - 120px) * 960 / 528));
+      display: flex; flex-direction: column; gap: 8px;
+    }
 
-        @font-face {
-            font-family: 'GameFont';
-            src: url('./assets/test.ttf');
-        }
-    </style>
+    /* Controls bar above the canvas (mute / pause). */
+    #topbar { display: flex; justify-content: flex-end; gap: 8px; }
+    .iconbtn {
+      width: 38px; height: 38px; padding: 0; cursor: pointer;
+      background: var(--panel); border: 2px solid var(--edge); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .iconbtn:hover  { border-color: var(--gold); }
+    .iconbtn:active { transform: translateY(1px); }
+    .iconbtn img    { width: 20px; height: 20px; image-rendering: pixelated; pointer-events: none; }
+
+    /* Game viewport: fixed 960×528 aspect. */
+    #frame {
+      position: relative; width: 100%; aspect-ratio: 960 / 528;
+      background: #000;
+      border: 3px solid var(--edge); border-radius: 6px;
+      box-shadow: 0 0 0 2px var(--gold), 0 12px 48px rgba(0,0,0,.6);
+      overflow: hidden;
+    }
+    #frame canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+    /* Overlays (title / pause / win / over) sit inside the frame and only show
+       between rounds. pointer-events:none lets a tap fall through to the canvas
+       "press to start"; buttons opt back in. */
+    .overlay {
+      position: absolute; inset: 0; z-index: 10; pointer-events: none;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+      padding: 20px; text-align: center; background: rgba(11,8,20,.74);
+    }
+    .overlay.hidden { display: none; }
+    .title    { margin: 0; color: var(--gold); letter-spacing: 3px;
+                text-shadow: 0 3px 0 var(--edge); font-size: clamp(30px, 7vw, 60px); }
+    .subtitle { margin: 0; font-family: 'KenneyFutureNarrow', monospace; letter-spacing: 8px;
+                opacity: .8; font-size: clamp(11px, 2vw, 16px); }
+    .hint     { margin-top: 4px; font-family: 'KenneyFutureNarrow', monospace; font-size: 12px; opacity: .6; }
+    .card {
+      background: var(--panel); border: 3px solid var(--edge);
+      box-shadow: inset 0 0 0 2px var(--line); border-radius: 10px;
+      padding: 16px 26px; font-size: 14px; line-height: 1.9;
+    }
+    .card .v { color: var(--gold); }
+
+    .btn {
+      pointer-events: auto; cursor: pointer;
+      font-family: 'GameFont', monospace; font-size: 18px; letter-spacing: 1px;
+      color: var(--edge); background: var(--gold);
+      border: none; border-bottom: 4px solid var(--gold-dark); border-radius: 10px;
+      padding: 12px 32px;
+    }
+    .btn:hover  { filter: brightness(1.08); }
+    .btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+    .btn.secondary { color: var(--cream); background: var(--panel); border-bottom-color: var(--edge); }
+
+    /* Touch pad: a full-width row directly below the canvas (matches the original
+       layout). Movement on the left, actions on the right; flex-stretched. */
+    #touch { display: none; width: 100%; gap: 8px; }
+    #touch.show { display: flex; }
+    #touch .pad { display: flex; gap: 8px; }
+    .tbtn {
+      flex: 1; min-width: 64px; height: 60px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--panel); border: 2px solid var(--edge); border-radius: 12px;
+      border-bottom-width: 4px;
+    }
+    .tbtn:active { transform: translateY(2px); border-bottom-width: 2px; background: var(--line); }
+    .tbtn img { width: 28px; height: 28px; image-rendering: pixelated; pointer-events: none; }
+    #t-shoot { flex: 1; border-color: #5a2230; }
+    #t-jump  { flex: 1.5; border-color: var(--gold-dark); }
+  </style>
 </head>
-
 <body>
-    <script src="./dist/index.js"></script>
-</body>
+  <div class="wrap">
+    <!-- controls bar -->
+    <div id="topbar">
+      <button id="btn-mute" class="iconbtn" title="Sound (M)">
+        <img src="./assets/icons/icon_sound.png" alt="sound">
+      </button>
+      <button id="btn-pause" class="iconbtn" title="Pause (P)">
+        <img src="./assets/icons/icon_pause.png" alt="pause">
+      </button>
+    </div>
 
+    <!-- game -->
+    <div id="frame">
+      <canvas id="game-canvas"></canvas>
+
+      <div id="ov-title" class="overlay hidden">
+        <h1 class="title">CRATERS</h1>
+        <p class="subtitle">ADVENTURE</p>
+        <button id="btn-start" class="btn">START</button>
+        <p class="hint">← → move &nbsp;·&nbsp; SPACE jump &nbsp;·&nbsp; SHIFT dash &nbsp;·&nbsp; J shoot</p>
+      </div>
+
+      <div id="ov-pause" class="overlay hidden">
+        <h1 class="title">PAUSED</h1>
+        <button id="btn-resume" class="btn">RESUME</button>
+        <button id="btn-restart-p" class="btn secondary">RESTART</button>
+      </div>
+
+      <div id="ov-win" class="overlay hidden">
+        <h1 class="title">YOU WIN!</h1>
+        <div id="win-card" class="card"></div>
+        <button id="btn-again" class="btn">PLAY AGAIN</button>
+      </div>
+
+      <div id="ov-over" class="overlay hidden">
+        <h1 class="title" style="color:var(--danger)">GAME OVER</h1>
+        <div id="over-card" class="card"></div>
+        <button id="btn-retry" class="btn">RETRY</button>
+      </div>
+    </div>
+
+    <!-- touch pad (mobile only), directly below the canvas -->
+    <div id="touch">
+      <div class="pad">
+        <button id="t-left"  class="tbtn"><img src="./assets/icons/icon_arrow.png" style="transform:scaleX(-1)" alt="left"></button>
+        <button id="t-right" class="tbtn"><img src="./assets/icons/icon_arrow.png" alt="right"></button>
+      </div>
+      <button id="t-shoot" class="tbtn"><img src="./assets/icons/icon_fire.png" alt="shoot"></button>
+      <button id="t-jump"  class="tbtn"><img src="./assets/icons/icon_jump.png" alt="jump"></button>
+    </div>
+  </div>
+
+  <script src="./dist/index.js"></script>
+</body>
 </html>

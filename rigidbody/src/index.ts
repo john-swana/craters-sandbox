@@ -313,6 +313,9 @@ const renderLoop = new RenderLoop((loop: any) => {
     // Draw UI with FontManager
     font.draw("FPS: " + fps, window.innerWidth - 120, 30);
     font.draw("Bodies: " + bodies.length, window.innerWidth - 120, 60);
+
+    // Advance input edge state once per fixed step (collapses "just pressed" → "held").
+    input.update();
 });
 
 // Prevent context menu
