@@ -444,6 +444,9 @@ const renderLoop = new RenderLoop((loop: any) => {
             font.draw("COLLISION!", window.innerWidth - 150, 60);
         }
     }
+
+    // Advance input edge state once per fixed step (collapses "just pressed" → "held").
+    input.update();
 });
 
 // Prevent long-press context menu on mobile

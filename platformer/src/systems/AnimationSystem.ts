@@ -2,10 +2,15 @@ import { EntityComponentSystem as ECS } from "craters";
 import { SpriteRender } from "../components/SpriteRender";
 
 export class AnimationSystem extends ECS.System {
-    execute(delta: number) {
-        const query = this.world.createQuery([SpriteRender]);
+    // Cached query — created once in initialize(), reused every frame.
+    private query!: ECS.Query;
 
-        query.entities.forEach((entity: any) => {
+    initialize(): void {
+        this.query = this.world!.createQuery([SpriteRender]);
+    }
+
+    execute(delta: number) {
+        this.query.entities.forEach((entity: any) => {
             const sprite = entity.getComponent(SpriteRender);
             if (sprite.currentAnim && sprite.animations[sprite.currentAnim]) {
                 const anim = sprite.animations[sprite.currentAnim];

@@ -20,85 +20,89 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.`;
+
 (async function main() {
-    const assetsManager = new AssetsManager()
+    const assetsManager = new AssetsManager();
 
     // UI Elements
     const collapseBtn = document.getElementById('collapse-overlay') as HTMLButtonElement;
-    const uiOverlay = document.getElementById('ui-overlay') as HTMLDivElement;
+    const uiOverlay   = document.getElementById('ui-overlay') as HTMLDivElement;
 
-    // Collapse button logic
     if (collapseBtn && uiOverlay) {
         collapseBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             uiOverlay.classList.toggle('collapsed');
-            if (uiOverlay.classList.contains('collapsed')) {
-                collapseBtn.textContent = '+';
-                collapseBtn.title = "Expand Panel";
-            } else {
-                collapseBtn.textContent = '_';
-                collapseBtn.title = "Collapse Panel";
-            }
+            collapseBtn.textContent = uiOverlay.classList.contains('collapsed') ? '+' : '_';
+            collapseBtn.title = uiOverlay.classList.contains('collapsed') ? 'Expand Panel' : 'Collapse Panel';
         });
         uiOverlay.addEventListener('click', (e) => {
             if (uiOverlay.classList.contains('collapsed') && e.target !== collapseBtn) {
                 uiOverlay.classList.remove('collapsed');
                 collapseBtn.textContent = '_';
-                collapseBtn.title = "Collapse Panel";
+                collapseBtn.title = 'Collapse Panel';
             }
         });
     }
 
-    await assetsManager.loadFont("Pixel font", "url(\"./fonts/Kenney Pixel.ttf\") format(\"truetype\")")
-        .then(function (font) {
-            (document as any).fonts.add(font)
-        })
-        .then(async function () {
-            const canvas2DRenderer = new Canvas2DRenderer(window.innerWidth, window.innerHeight)
-            document.body.append(canvas2DRenderer.canvasElement)
-            let _rsz: any;
-            const _onResize = () => { clearTimeout(_rsz); _rsz = setTimeout(() => canvas2DRenderer.resize(window.innerWidth, window.innerHeight), 150); };
-            window.addEventListener('resize', _onResize);
-            window.addEventListener('orientationchange', _onResize);
-            const fontManager = new FontManager(canvas2DRenderer, "20px Pixel font", "#fafafa")
+    // ── Recommended font loading pattern ────────────────────────────────────
+    // Step 1: register the FontFace with the document.
+    const font = await assetsManager.loadFont(
+        "Pixel font",
+        "url(\"./fonts/Kenney Pixel.ttf\") format(\"truetype\")"
+    );
+    (document as any).fonts.add(font);
 
-            // Load fonts
-            var fontLicense = fontManager.load(text)
-            var fontTitle = fontManager.load("PRESS ENTER TO START")
+    // Step 2: await document.fonts.load() so the font is FULLY decoded in the
+    // browser's rendering pipeline before FontManager.load() measures and bakes
+    // each character into the atlas.
+    //
+    // Skipping this step causes measureText() to silently fall back to the
+    // system font on the first call (especially on mobile / high-DPR screens),
+    // producing incorrect character widths → atlas misalignment → clipping and
+    // neighbouring-sprite bleed.
+    await document.fonts.load("20px Pixel font");
 
-            const input = new Input();
-            input.bind(Input.KEY.ENTER, "START");
+    // Step 3: safe to create the renderer and bake the font atlas now.
+    const canvas2DRenderer = new Canvas2DRenderer(window.innerWidth, window.innerHeight);
+    document.body.append(canvas2DRenderer.canvasElement);
 
-            let showTitle = true;
+    let _rsz: any;
+    const _onResize = () => {
+        clearTimeout(_rsz);
+        _rsz = setTimeout(() => canvas2DRenderer.resize(window.innerWidth, window.innerHeight), 150);
+    };
+    window.addEventListener('resize', _onResize);
+    window.addEventListener('orientationchange', _onResize);
 
-            const renderLoop = new RenderLoop(function (renderLoop: typeof RenderLoop) {
-                if (input.isPressed("START") === 2) {
-                    showTitle = !showTitle;
-                }
+    const fontManager = new FontManager(canvas2DRenderer, "20px Pixel font", "#fafafa");
+    const fontLicense = fontManager.load(text);
+    const fontTitle   = fontManager.load("PRESS ENTER TO START");
 
-                canvas2DRenderer.clear();
+    const input = new Input();
+    input.bind(Input.KEY.ENTER, "START");
 
-                if (showTitle) {
-                    if (Math.floor(Date.now() / 500) % 2 === 0) {
-                        // Measure text width so we can centre it at any screen size
-                        canvas2DRenderer.context.font = "20px Pixel font";
-                        const tw = canvas2DRenderer.context.measureText("PRESS ENTER TO START").width;
-                        const tx = (window.innerWidth - tw) / 2;
-                        const ty = window.innerHeight / 2;
-                        fontTitle.draw("PRESS ENTER TO START", tx, ty);
-                    }
-                } else {
-                    const margin = 20;
-                    const lineHeight = 40 * 0.75;
-                    text.split("\n")
-                        .map((line: string, ln: number) =>
-                            fontLicense.draw(line, margin, margin + lineHeight * ln)
-                        );
-                }
-            })
+    let showTitle = true;
 
-        })
-        .catch(function (err) {
-            throw err
-        })
-})()
+    new RenderLoop(function () {
+        if (input.isPressed("START") === 2) showTitle = !showTitle;
+
+        canvas2DRenderer.clear();
+
+        if (showTitle) {
+            if (Math.floor(Date.now() / 500) % 2 === 0) {
+                canvas2DRenderer.context.font = "20px Pixel font";
+                const tw = canvas2DRenderer.context.measureText("PRESS ENTER TO START").width;
+                fontTitle.draw("PRESS ENTER TO START", (window.innerWidth - tw) / 2, window.innerHeight / 2);
+            }
+        } else {
+            const margin = 20;
+            const lineHeight = 40 * 0.75;
+            text.split("\n").forEach((line: string, ln: number) => {
+                fontLicense.draw(line, margin, margin + lineHeight * ln);
+            });
+        }
+
+        // Advance input edge state once per frame (collapses "just pressed" → "held").
+        input.update();
+    });
+})();

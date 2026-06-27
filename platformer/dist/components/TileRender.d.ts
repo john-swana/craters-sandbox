@@ -5,5 +5,7 @@ export declare class TileRender extends ECS.Component {
     image: HTMLImageElement;
     width: number;
     height: number;
-    constructor(srcX: number, srcY: number, image: HTMLImageElement, width?: number, height?: number);
+    srcW: number;
+    srcH: number;
+    constructor(srcX: number, srcY: number, image: HTMLImageElement, width?: number, height?: number, srcW?: number, srcH?: number);
 }
