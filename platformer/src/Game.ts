@@ -762,7 +762,10 @@ export class Game {
         const scale = H / SRC.h;
         const tileW = SRC.w * scale;
         const parallax = 0.3;
-        let x = (-camX * parallax) % tileW;
+        // Match the foreground's scroll direction: tiles render at worldX + camX,
+        // so the background offset must use +camX (a fraction of it), not -camX —
+        // otherwise the hills scroll opposite to the ground (reversed parallax).
+        let x = (camX * parallax) % tileW;
         if (x > 0) x -= tileW;
         for (; x < W; x += tileW) {
             ctx.drawImage(img, SRC.x, SRC.y, SRC.w, SRC.h,
