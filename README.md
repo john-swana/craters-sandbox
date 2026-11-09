@@ -1,6 +1,6 @@
 # craters-sandbox
 
-A collection of examples, demos, and sandboxes built with the [craters](https://github.com/john-swana/craters) game engine (`^0.2.0`). These projects demonstrate various features and capabilities of the engine.
+A collection of examples, demos, and sandboxes built with the [craters](https://github.com/john-swana/craters) game engine (`^0.3.0`). These projects demonstrate various features and capabilities of the engine.
 
 ## Examples
 

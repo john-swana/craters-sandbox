@@ -1,0 +1,9 @@
+Tilemap Manager Demo Credits
+============================
+
+Graphics
+--------
+Source: Kenney - Platformer Pack (https://www.kenney.nl)
+License: CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
+Assets:
+- platformer.png
