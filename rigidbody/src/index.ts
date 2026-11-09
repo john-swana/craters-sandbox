@@ -142,7 +142,8 @@ function update(dt: number) {
         for (let i = 0; i < bodies.length; i++) {
             const body = bodies[i];
             if (!body.isStatic && gravityEnabled) {
-                body.applyForce(gravity.clone().scale(body.mass));
+                // wake = false: per-step gravity must not keep resting bodies awake
+                body.applyForce(gravity.clone().scale(body.mass), false);
             }
             body.integrate(subDt);
 
@@ -295,6 +296,8 @@ const renderLoop = new RenderLoop((loop: any) => {
 
     if (input.isPressed("TOGGLE_GRAVITY") && Date.now() - lastG > 200) {
         gravityEnabled = !gravityEnabled;
+        // Bodies may have fallen asleep mid-air while gravity was off
+        bodies.forEach(body => body.wake());
         lastG = Date.now();
     }
 
