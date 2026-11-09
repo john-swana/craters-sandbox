@@ -1,17 +1,32 @@
 Platformer Demo Credits
 =======================
 
-Graphics & Fonts
-----------------
-Source: Kenney (https://www.kenney.nl)
+Graphics & Sound Effects
+------------------------
+Source: Kenney - New Platformer Pack 1.1 (https://www.kenney.nl)
+License: CC0 1.0 Universal (see kenney/License.txt)
+Assets:
+- kenney/backgrounds.png, kenney/characters.png, kenney/enemies.png, kenney/tiles.png
+- kenney/sounds/sfx_*.ogg (jump, coin, gem, hurt, bump, magic, select, throw, ...)
+
+Particles
+---------
+Source: Kenney - Particle Pack (https://www.kenney.nl)
 License: CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
 Assets:
-- Platformer Pack (platformer.png, player.png, coin.png)
-- Fonts (test.ttf)
+- particles/circle_05.png, dirt_01.png, dirt_02.png, smoke_03.png, smoke_06.png,
+  spark_06.png, spark_07.png, star_04.png, star_07.png
 
-Sound Effects & Music
----------------------
+Fonts
+-----
+Source: Kenney - Fonts (https://www.kenney.nl)
+License: CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
+Assets:
+- fonts/Kenney Future.ttf, fonts/Kenney Future Narrow.ttf
+
+Music
+-----
 Source: CanariPack 8BIT TopDown by Johan Vinet (https://canarigames.itch.io/canaripack-8bit-topdown)
 License: Paid License (Purchased)
 Assets:
-- Jump, Land, Pickup, Hurt, Music
+- audio/music.wav ("1BITTopDownMusics - Track 01 (1BIT Adventure)")
